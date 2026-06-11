@@ -1,0 +1,4 @@
+interface:
+  display_name: "Kaggle Skill"
+  short_description: "Memory-gated Kaggle research workflow"
+  default_prompt: "Use $kaggle-skill to set up an isolated Kaggle competition research loop with memory, gates, reflection, and dry-stop checks."
