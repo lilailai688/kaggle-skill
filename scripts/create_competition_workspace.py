@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+from kaggle_core.workspace import bootstrap_workspace
 
 
 DIRS = [
@@ -101,7 +104,17 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    workspace = create_workspace(Path(args.root), args.slug, args.metric, args.direction)
+    print(
+        "warning: create_competition_workspace.py is deprecated; use kaggle_ops.py bootstrap",
+        file=sys.stderr,
+    )
+    workspace = Path(args.root) / args.slug
+    bootstrap_workspace(
+        workspace,
+        slug=args.slug,
+        metric=args.metric,
+        direction=args.direction,
+    )
     print(f"created: {workspace}")
     return 0
 

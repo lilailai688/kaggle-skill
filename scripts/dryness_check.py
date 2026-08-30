@@ -5,9 +5,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from kaggle_core.decisions import check_dryness as check_v2_dryness
+from kaggle_core.schema import load_and_validate_competition
 
 
 VALID_STATUSES = {"completed", "valid", "accepted"}
@@ -123,24 +127,51 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--patience", type=int, default=3)
     parser.add_argument("--eps", type=float, default=0.001)
     parser.add_argument("--write-flag", action="store_true", help="Write flags/EXPERIMENT_DRY.flag when dry.")
+    parser.add_argument("--track")
+    parser.add_argument("--phase")
+    parser.add_argument("--data-snapshot")
+    parser.add_argument("--family", default="baseline")
+    parser.add_argument("--metric-source", default="local_cv")
+    parser.add_argument("--comparable-group", default="default")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     workspace = Path(args.workspace)
-    result = dryness_result(
-        load_ledger(workspace / "experiment_ledger.jsonl"),
-        args.metric,
-        args.direction,
-        args.patience,
-        args.eps,
-        workspace / "ideas_backlog.md",
-    )
-    if args.write_flag and result["dry"]:
-        flags = workspace / "flags"
-        flags.mkdir(exist_ok=True)
-        (flags / "EXPERIMENT_DRY.flag").write_text(json.dumps(result, indent=2), encoding="utf-8", newline="\n")
+    print("warning: dryness_check.py is deprecated; use kaggle_ops.py dryness", file=sys.stderr)
+    if (workspace / "competition.json").is_file():
+        competition = load_and_validate_competition(workspace)
+        manifests = sorted((workspace / "data" / "manifests").glob("*.json"), key=lambda path: path.stat().st_mtime)
+        snapshot_id = args.data_snapshot or (manifests[-1].stem if manifests else None)
+        if not snapshot_id:
+            raise SystemExit("V2 workspace has no data snapshot; pass --data-snapshot")
+        result = check_v2_dryness(
+            workspace,
+            track_id=args.track or competition["tracks"][0]["id"],
+            phase_id=args.phase or competition["phases"][0]["id"],
+            data_snapshot_id=snapshot_id,
+            experiment_family=args.family,
+            metric_name=args.metric,
+            metric_source=args.metric_source,
+            comparable_group=args.comparable_group,
+            patience=args.patience,
+            eps=args.eps,
+            write_flag=args.write_flag,
+        )
+    else:
+        result = dryness_result(
+            load_ledger(workspace / "experiment_ledger.jsonl"),
+            args.metric,
+            args.direction,
+            args.patience,
+            args.eps,
+            workspace / "ideas_backlog.md",
+        )
+        if args.write_flag and result["dry"]:
+            flags = workspace / "flags"
+            flags.mkdir(exist_ok=True)
+            (flags / "EXPERIMENT_DRY.flag").write_text(json.dumps(result, indent=2), encoding="utf-8", newline="\n")
     print(json.dumps(result, indent=2, sort_keys=True))
     return 2 if result["dry"] else 0
 

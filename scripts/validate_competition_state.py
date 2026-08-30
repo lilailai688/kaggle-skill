@@ -5,8 +5,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+from kaggle_core.workspace import validate_workspace as validate_v2_workspace
 
 
 REQUIRED_DIRS = ["configs", "data", "flags", "notebooks", "reports", "runs", "submissions"]
@@ -88,8 +91,18 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    errors, warnings = validate_workspace(Path(args.workspace))
-    result = {"ok": not errors, "errors": errors, "warnings": warnings}
+    print(
+        "warning: validate_competition_state.py is deprecated; use kaggle_ops.py validate",
+        file=sys.stderr,
+    )
+    workspace = Path(args.workspace)
+    if (workspace / "competition.json").is_file():
+        result = validate_v2_workspace(workspace)
+        errors = result["errors"]
+        warnings = result["warnings"]
+    else:
+        errors, warnings = validate_workspace(workspace)
+        result = {"ok": not errors, "errors": errors, "warnings": warnings}
     if args.json:
         print(json.dumps(result, indent=2, sort_keys=True))
     else:

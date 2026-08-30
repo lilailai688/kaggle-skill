@@ -5,8 +5,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+from kaggle_core.decisions import check_submission_gate as check_v2_submission_gate
 
 
 REQUIRED_GATES = [
@@ -68,14 +71,23 @@ def check_report(report: dict[str, Any]) -> dict[str, Any]:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("report", help="Path to submission gate JSON report.")
+    parser.add_argument("--workspace", help="V2 workspace root when checking a V2 report.")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    print("warning: submission_gate_check.py is deprecated; use kaggle_ops.py gate", file=sys.stderr)
     try:
-        report = load_report(Path(args.report))
-        result = check_report(report)
+        report_path = Path(args.report)
+        report = load_report(report_path)
+        if report.get("schema_version") == 2:
+            if not args.workspace:
+                raise ValueError("--workspace is required for a V2 gate report")
+            result = check_v2_submission_gate(Path(args.workspace), report_path)
+            result["ready"] = result["ready_for_human_submission"]
+        else:
+            result = check_report(report)
     except Exception as exc:  # noqa: BLE001 - CLI should print a clean failure.
         result = {"ready": False, "candidate_id": "", "errors": [str(exc)], "warnings": []}
     print(json.dumps(result, indent=2, sort_keys=True))

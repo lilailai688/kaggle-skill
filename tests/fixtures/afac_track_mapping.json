@@ -1,0 +1,13 @@
+{
+  "default_track_id": "legacy-unmapped",
+  "track_rules": [
+    {
+      "pattern": "(?i)task1",
+      "track_id": "Task1"
+    },
+    {
+      "pattern": "(?i)task2",
+      "track_id": "Task2"
+    }
+  ]
+}

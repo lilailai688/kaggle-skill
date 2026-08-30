@@ -1,52 +1,44 @@
-# Architecture
+# V2 架构
 
-Use a three-layer architecture for every live competition.
+V2 把通用竞赛治理与赛题建模逻辑分开。核心不假定样本是表格行、图片、用户、
+文档、时间点、图节点或任何具体业务对象。
 
-## Memory Layer
+## 稳定身份
 
-Memory is the source of truth. It must be stored in files that survive context
-loss, process restarts, and agent handoffs.
+- **Phase**：拥有独立截止时间和提交额度的比赛阶段。
+- **Track**：目标、流水线、模态、子任务或独立研究方向。
+- **Data snapshot**：输入路径、大小、SHA256 和契约结果构成的不可变清单。
+- **Experiment family**：同一 track 内可比较的一类研究方向。
+- **Lane**：`track + phase + data snapshot`，冠军按 lane 隔离。
+- **Comparable group**：允许指标互相比较的完整评测协议标识。
 
-Required files:
+## 四层结构
 
-- `STATE.md`: current stage, best score, active run, next action, and blockers.
-- `ideas_backlog.md`: candidate ideas with priority and status.
-- `experiment_ledger.jsonl`: append-only experiment evidence.
+1. **画像层**：`competition.json`、规则快照、输入输出契约、阶段、track、指标和预算。
+2. **证据层**：追加事件、数据清单、运行清单、日志、checkpoint、指标和内容寻址产物。
+3. **决策层**：分 lane 的枯竭检测、候选门控、榜单反馈、显式晋升、回滚和冠军表。
+4. **交付层**：确定性发布、冷启动证据、最终核验和赛后复盘。
 
-Recommended directories:
+`STATE.md` 与 `ideas_backlog.md` 是派生视图，不能成为第二套真相来源。当前状态每天
+归档一次，完整历史始终由账本和注册表重建。
 
-- `runs/`: one isolated directory per experiment run.
-- `reports/`: validation, reflection, and gate reports.
-- `flags/`: small files written by detection checks.
-- `submissions/`: candidate files and provenance records.
+## 可审计决策单元
 
-## Detection Layer
+一个决策单元可以包含多条紧密相关的命令，但只能有一个假设和一个验收边界：
 
-Detection turns raw events into explicit signals. Detection scripts should write
-small flag files instead of taking large actions themselves.
+1. 声明想法、预期信号和停止条件；
+2. 固定数据、代码、配置、环境、指标协议和受控不变量；
+3. 在独立目录与运行锁下执行；
+4. 验证产物并记录带类型的指标；
+5. 接受、拒绝、细化或停止；
+6. 重新物化状态。
 
-Common flags:
+不要把训练、评测、打包、提交和榜单解释合并成一段没有持久 checkpoint 的操作。
 
-- `EXPERIMENT_DRY.flag`: the current direction is no longer yielding progress.
-- `SUBMIT_READY.flag`: a candidate passed automated checks and needs approval.
-- `VALIDATION_FAILED.flag`: the latest run is untrustworthy.
-- `RESEARCH_REFILL.flag`: the backlog needs new evidence-backed ideas.
+## 适配器边界
 
-## Decision Layer
+赛题特有行为放在工作区的 validator/evaluator hook 中。hook 接收 `workspace`、
+`source` 和声明契约，返回结构化 `errors`、`warnings` 与 `details`。
 
-The orchestrator reads memory and flags, chooses exactly one action, writes back
-state, then stops or waits for the next wake-up.
-
-Priority order:
-
-1. If submission is ready, run the submission gate and request human approval.
-2. If a run finished, validate it and append the ledger.
-3. If the backlog has a high-priority todo idea and compute is clean, run it.
-4. If the direction is dry, reflect and refill ideas from research.
-5. Otherwise stay idle and record the next check.
-
-## One-Action Rule
-
-Execute one meaningful action per wake-up. Do not train, evaluate, research,
-and submit in one uninterrupted chain. This rule makes failures inspectable and
-prevents an agent from compounding bad assumptions.
+图像解码、分组泄漏、时间可用性、图连通性、仿真约束、Notebook 运行限制或特定
+文件名都属于适配器；哈希、隔离、事件、可比性、审批和发布安全属于核心。

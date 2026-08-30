@@ -1,4 +1,4 @@
 interface:
   display_name: "Kaggle Skill"
-  short_description: "Memory-gated Kaggle research workflow"
-  default_prompt: "Use $kaggle-skill to set up an isolated Kaggle competition research loop with memory, gates, reflection, and dry-stop checks."
+  short_description: "跨平台、跨模态的通用竞赛研究系统"
+  default_prompt: "使用 $kaggle-skill 完成赛题画像，建立可信验证，并管理隔离实验、可比证据、提交审批与最终复现。"

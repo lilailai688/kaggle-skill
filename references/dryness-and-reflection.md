@@ -1,55 +1,29 @@
-# Dryness And Reflection
+# 分赛道枯竭检测与复盘
 
-Dryness means a direction is no longer producing enough evidence of progress to
-justify more compute without new thinking.
+Dryness 只在下面的完整可比 lane 内判断：
 
-## Dry Signals
+`track + phase + data snapshot + experiment family + metric source + comparable group`
 
-Treat a direction as dry when any condition holds:
+不同任务、日期、fold、代理指标、public/private 榜单或实验族不能混合。
 
-- The last `patience` valid experiments improved the best metric by less than
-  `eps`.
-- The best score is stuck near a known ceiling.
-- The backlog has no high-priority todo idea.
-- Failures repeat with the same root cause.
-- New experiments change many variables but produce no interpretable signal.
+## 默认条件
 
-## What To Do When Dry
+满足任一条件即触发：
 
-Do not keep tuning small parameters blindly. Switch to reflection:
+1. 最近 5 个有效、完成且可比的运行，累计 rolling-best 提升不超过主指标 `eps`，
+   且该 track/family 没有开放的高优先级想法；
+2. 同一规范化根因连续失败 3 次。
 
-1. Summarize the last valid experiments and failed experiments.
-2. Identify which assumptions survived.
-3. Identify which assumptions were falsified.
-4. Search for similar competitions, writeups, notebooks, papers, and forum
-   signals.
-5. Refill `ideas_backlog.md` with evidence-backed, testable ideas.
-6. Clear the dry flag only after at least one high-priority idea is available.
+CLI 写入 lane 专属 flag；条件解除后自动删除。其他 track 的新想法不会错误清除
+当前 lane 的枯竭状态。
 
-## Reflection Template
+## 反思流程
 
-```markdown
-## Reflection <date>
+1. 列出参与判断的运行与受控变化；
+2. 区分已证伪假设与证据不足；
+3. 审查验证可信度、数据覆盖、指标实现、资源瓶颈和合规约束；
+4. 决定改变表示、验证协议、模型族、数据源、问题分解，或关闭赛道；
+5. 写入有证据的新 idea，或显式停止。
 
-Best result:
-Dry signal:
-Likely bottleneck:
-What failed:
-What still looks promising:
-New evidence:
-Next high-priority ideas:
-Stop conditions:
-```
-
-## Research Refill Quality Bar
-
-Every new idea should include:
-
-- source or analogy
-- expected signal
-- validation check
-- failure mode
-- estimated cost
-- stop condition
-
-Ideas without validation logic should remain low priority.
+补充想法需要预期信号、验证规则、失败模式、成本和停止条件。对同一枯竭超参数
+搜索做模糊变体，不算研究补充。

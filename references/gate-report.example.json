@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "candidate_id": "candidate-001",
+  "track_id": "primary",
+  "phase_id": "active",
+  "data_snapshot_id": "replace-with-snapshot-id",
+  "experiment_family": "baseline",
+  "run_id": "replace-with-run-id",
+  "intent": "candidate",
+  "artifact_path": "runs/replace-with-run-id/submission.csv",
+  "artifact_sha256": "replace-with-64-character-sha256",
+  "ensemble": false,
+  "controlled_difference": "Only the declared model component changed.",
+  "release_manifest": null,
+  "automated_gates": {
+    "format": true,
+    "compliance": true,
+    "artifact_integrity": true,
+    "leakage": true,
+    "temporal_integrity": true,
+    "training_inference_boundary": true,
+    "prohibited_shortcuts": true,
+    "artifact_freshness": true,
+    "metric": true
+  },
+  "human_approval": {
+    "approved": true,
+    "candidate_id": "candidate-001",
+    "artifact_sha256": "replace-with-64-character-sha256",
+    "intent": "candidate",
+    "approver": "replace-with-human-identity",
+    "request_id": "replace-with-approval-request-id",
+    "approved_at": "2026-01-01T00:00:00+00:00",
+    "expires_at": "2026-01-01T01:00:00+00:00"
+  },
+  "notes": []
+}
